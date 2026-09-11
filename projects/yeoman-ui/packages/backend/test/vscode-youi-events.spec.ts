@@ -274,6 +274,70 @@ describe("vscode-youi-events unit test", () => {
     events.doGeneratorInstall();
   });
 
+  describe("doGeneratorProgress", () => {
+    it("backward compatibility: showProgress=false on install phase calls doGeneratorInstall", () => {
+      _.set(vscode, "ProgressLocation.Notification", 15);
+      eventsMock.expects("doClose").once();
+      windowMock
+        .expects("withProgress")
+        .withArgs({
+          location: 15,
+          title: "Installing dependencies...",
+          cancellable: false,
+        })
+        .resolves();
+
+      // Should fall back to classic behavior
+      events.doGeneratorProgress("testProject", "install", false);
+    });
+
+    it("backward compatibility: showProgress=false on writing phase does nothing", () => {
+      // Should not call doClose or withProgress
+      eventsMock.expects("doClose").never();
+      windowMock.expects("withProgress").never();
+
+      events.doGeneratorProgress("testProject", "writing", false);
+    });
+
+    it("backward compatibility: showProgress=false on end phase does nothing", () => {
+      // Should not call doClose or withProgress
+      eventsMock.expects("doClose").never();
+      windowMock.expects("withProgress").never();
+
+      events.doGeneratorProgress("testProject", "end", false);
+    });
+
+    it("enhanced mode: showProgress=true on writing phase shows progress with project name", () => {
+      _.set(vscode, "ProgressLocation.Notification", 15);
+      eventsMock.expects("doClose").once();
+      windowMock
+        .expects("withProgress")
+        .withArgs({
+          location: 15,
+          title: "Generating testProject",
+          cancellable: false,
+        })
+        .resolves();
+
+      events.doGeneratorProgress("testProject", "writing", true);
+    });
+
+    it("enhanced mode: showProgress=true on writing phase with no project name", () => {
+      _.set(vscode, "ProgressLocation.Notification", 15);
+      eventsMock.expects("doClose").once();
+      windowMock
+        .expects("withProgress")
+        .withArgs({
+          location: 15,
+          title: "Generating...",
+          cancellable: false,
+        })
+        .resolves();
+
+      events.doGeneratorProgress(undefined, "writing", true);
+    });
+  });
+
   it("setAppWizardHeaderTitle", () => {
     const testTitle = "testTitle";
     const testInfo = "testInfo";
