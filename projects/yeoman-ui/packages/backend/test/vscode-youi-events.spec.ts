@@ -515,7 +515,7 @@ describe("vscode-youi-events unit test", () => {
         .resolves();
       workspaceMock.expects("updateWorkspaceFolders").withArgs(0, null);
 
-      events.doGeneratorDone(
+      void events.doGeneratorDone(
         true,
         "success message",
         "Open the project in a multi-root workspace",
@@ -539,7 +539,7 @@ describe("vscode-youi-events unit test", () => {
         .withArgs("vscode.openFolder")
         .resolves();
 
-      events.doGeneratorDone(
+      void events.doGeneratorDone(
         true,
         "success message",
         "Open the project in a stand-alone",
@@ -559,7 +559,7 @@ describe("vscode-youi-events unit test", () => {
         )
         .resolves();
 
-      events.doGeneratorDone(
+      void events.doGeneratorDone(
         true,
         "success message",
         "Create the project and close it for future use",
