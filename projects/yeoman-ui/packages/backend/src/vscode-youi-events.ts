@@ -125,7 +125,8 @@ export class VSCodeYouiEvents implements YouiEvents {
 
   public doGeneratorInstall(): void {
     this.doClose();
-    this.showInstallMessage();
+    // Classic mode: pass undefined projectName and empty message to show "Installing dependencies..." title only
+    this.showInstallMessage(undefined, "");
   }
 
   public doGeneratorProgress(
@@ -133,34 +134,27 @@ export class VSCodeYouiEvents implements YouiEvents {
     phase: "writing" | "install" | "end",
     showProgress: boolean = false
   ): void {
-    // Check VS Code setting (default: true)
-    // Note: This setting is not declared in yeoman-ui's package.json - consumers
-    // (e.g., application-modeler, app-generator) declare it in their package.json
-    // if they want users to control it. The true default is safe - actual gating
-    // happens via the per-generator showProgress option passed by consumers.
-    const config = vscode.workspace.getConfiguration();
-    const settingEnabled = config.get<boolean>(
-      "ApplicationWizard.showGeneratorProgress",
-      true
-    );
-
-    // Only show if both the setting is enabled AND the generator opts in
-    if (!settingEnabled || !showProgress) {
-      return; // Don't show progress notification if disabled or not opted in
+    // Backward compatibility: if generator doesn't opt in, fall back to classic behavior
+    // (only show toast on "install" phase)
+    if (!showProgress) {
+      if (phase === "install") {
+        // Show classic "Installing dependencies..." toast
+        this.doGeneratorInstall();
+      }
+      return;
     }
 
-    // Map phases to localized messages
+    // Enhanced mode: show multi-phase progress
     const phaseMessages = {
       writing: this.messages.progress_writing_files,
       install: this.messages.progress_installing,
       end: this.messages.progress_finalising,
     };
 
-    // Minimum duration for each phase (milliseconds)
     const MIN_DURATIONS = {
-      writing: 2000, // 2 seconds
-      install: 0, // No minimum - let npm install take as long as it needs
-      end: 1000, // 1 second
+      writing: 2000,
+      install: 0,
+      end: 1000,
     };
 
     const message = phaseMessages[phase];
@@ -271,17 +265,26 @@ export class VSCodeYouiEvents implements YouiEvents {
 
   private showInstallMessage(
     projectName?: string,
-    initialMessage: string = this.messages.progress_installing
+    initialMessage: string = this.messages.progress_preparing
   ): void {
     // Store project name for later use in success message
     this.currentProjectName = projectName;
 
-    // Use "Generating {projectName}" as the title if we have enhanced progress
-    // Otherwise use the classic "Installing dependencies..." title
-    const title =
-      projectName && initialMessage !== this.messages.progress_installing
+    // Determine if this is enhanced mode (any of the progress messages)
+    const isEnhancedMode =
+      initialMessage === this.messages.progress_preparing ||
+      initialMessage === this.messages.progress_writing_files ||
+      initialMessage === this.messages.progress_installing ||
+      initialMessage === this.messages.progress_finalising;
+
+    // Determine title:
+    // - Enhanced mode: "Generating {projectName}" or "Generating..."
+    // - Classic mode: "Installing dependencies..."
+    const title = isEnhancedMode
+      ? projectName
         ? `Generating ${projectName}`
-        : "Installing dependencies...";
+        : "Generating..."
+      : "Installing dependencies...";
 
     void vscode.window.withProgress(
       {

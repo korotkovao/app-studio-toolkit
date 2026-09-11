@@ -594,40 +594,38 @@ export class YeomanUI {
     // Check if generator opts in to progress notifications
     const showProgress = _.get(gen, "options.showGeneratorProgress", false);
 
-    if (showProgress) {
-      // NEW BEHAVIOR: Generator opts in - use enhanced progress notifications
+    // ALWAYS register all three event handlers
+    // doGeneratorProgress handles backward compatibility internally
 
-      // Listen to writing phase
-      gen.on("method:writing", () => {
-        const projectName = getProjectName();
-        this.youiEvents.doGeneratorProgress(
-          projectName,
-          "writing",
-          showProgress
-        );
-      });
+    // Listen to writing phase
+    gen.on("method:writing", () => {
+      const projectName = getProjectName();
+      void this.youiEvents.doGeneratorProgress(
+        projectName,
+        "writing",
+        showProgress
+      );
+    });
 
-      // Listen to install phase
-      gen.on("method:install", () => {
-        const projectName = getProjectName();
-        this.youiEvents.doGeneratorProgress(
-          projectName,
-          "install",
-          showProgress
-        );
-      });
+    // Listen to install phase
+    gen.on("method:install", () => {
+      const projectName = getProjectName();
+      void this.youiEvents.doGeneratorProgress(
+        projectName,
+        "install",
+        showProgress
+      );
+    });
 
-      // Listen to end phase
-      gen.on("method:end", () => {
-        const projectName = getProjectName();
-        this.youiEvents.doGeneratorProgress(projectName, "end", showProgress);
-      });
-    } else {
-      // OLD BEHAVIOR: Generator doesn't opt in - use classic "Installing dependencies..." toast
-      gen.on("method:install", () => {
-        this.youiEvents.doGeneratorInstall();
-      });
-    }
+    // Listen to end phase
+    gen.on("method:end", () => {
+      const projectName = getProjectName();
+      void this.youiEvents.doGeneratorProgress(
+        projectName,
+        "end",
+        showProgress
+      );
+    });
   }
 
   private getErrorInfo(error: any = "") {

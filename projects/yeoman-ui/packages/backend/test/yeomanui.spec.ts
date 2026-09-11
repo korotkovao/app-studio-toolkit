@@ -1367,10 +1367,15 @@ describe("yeomanui unit test", () => {
       GeneratorFilter.create(),
       flowPromise.state
     );
-    const gen: any = { on: () => "" };
+    const gen: any = {
+      on: () => "",
+      state: { project: { name: "testProject" } },
+    };
     const genMock = sandbox.mock(gen);
 
+    genMock.expects("on").withArgs("method:writing");
     genMock.expects("on").withArgs("method:install");
+    genMock.expects("on").withArgs("method:end");
     yeomanUiInstance["onGenInstall"](gen);
     genMock.verify();
   });
