@@ -268,6 +268,7 @@ describe("vscode-youi-events unit test", () => {
       .withArgs({
         location: 15,
         title: "Installing dependencies...",
+        cancellable: false,
       })
       .resolves();
     events.doGeneratorInstall();
